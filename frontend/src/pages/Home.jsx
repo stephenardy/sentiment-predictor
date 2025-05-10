@@ -1,121 +1,118 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import api from "../api";
-import { Link } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
-// import data from "../data";
+import SvgComponent from "../components/SvgFile";
 
 function Home({ setResults }) {
-  const [tweet, setTweet] = useState("");
-  const [tweetList, setTweetList] = useState([]);
+  const [file, setFile] = useState(null);
+  const [fileName, setFileName] = useState("");
+  const [isChecked, setIsChecked] = useState(false);
+  const [commentCol, setCommentCol] = useState("");
+  const [timestampCol, setTimestampCol] = useState(null);
 
   const navigate = useNavigate();
 
-  const fetchTweets = async () => {
+  const handlePredict = async () => {
+    const formData = new FormData();
+
+    formData.append("file", file);
+    formData.append("column_name", commentCol);
+    if (timestampCol !== null) {
+      formData.append("time_stamp", timestampCol);
+    }
+
     try {
-      const res = await api.get("/");
-      setTweetList(res.data.tweets);
+      const res = await api.post("/", formData);
+      setResults(res.data);
+      navigate("/result");
     } catch (error) {
-      console.error("Error fetching tweet list", error);
+      console.error("Error posting file", error);
     }
   };
 
-  useEffect(() => {
-    fetchTweets();
-  }, []);
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-
-    try {
-      await api.post("/", { tweet: tweet.trim() });
-      await fetchTweets();
-      setTweet("");
-    } catch (error) {
-      console.error("Error posting new tweet", error);
-    }
-  }
-
-  async function onPredict() {
-    try {
-      const res = await api.post("/predict", { tweets: tweetList });
-      console.log(res.data);
-      setResults(res.data.results);
-      navigate("/result");
-    } catch (error) {
-      console.error("Error predict tweets", error);
-    }
-  }
-
-  async function onClearTweet() {
-    try {
-      await api.delete("/");
-      await fetchTweets();
-    } catch (error) {
-      console.error("clear tweets failed", error);
-    }
-  }
+  const handleUploadFile = (e) => {
+    setFile(e.target.files[0]);
+    setFileName(e.target.files[0].name);
+  };
 
   return (
-    <div className="flex flex-col items-center">
-      <form
-        className="flex justify-center w-full mt-4"
-        onSubmit={(e) => handleSubmit(e)}
-      >
-        <input
-          className="w-64 mr-4 pl-2 border rounded"
-          placeholder="Input tweets here"
-          type="text"
-          value={tweet}
-          onChange={(e) => setTweet(e.target.value)}
-        />
+    <>
+      <div className="flex flex-col items-center mt-8 text-center">
+        <h1 className="font-bold text-5xl text-blue-500">Sentiment Analysis</h1>
+        <p className="w-2/3 my-4">
+          Aplikasi ini dirancang untuk menganalisis dan memprediksi sentimen
+          dalam bahasa Indonesia, khususnya terkait pemilihan umum pemimpin.
+          Kami membantu memprediksi sentimen opini publik dan menyajikan
+          visualisasi pola kecenderungan opini masyarakat secara akurat.
+        </p>
+      </div>
 
-        <button
-          disabled={!tweet}
-          className={` text-white p-1 rounded ${
-            !tweet
-              ? "bg-gray-300 cursor-not-allowed"
-              : "bg-purple-500 hover:bg-purple-800 cursor-pointer"
-          }`}
-        >
-          Submit
-        </button>
-      </form>
-      <div className="flex flex-col mt-8 bg-gray-200/50 w-sm min-h-64 rounded">
-        <h2 className="flex justify-center font-bold">List of Tweets</h2>
-        <ul className="list-decimal pl-8">
-          {tweetList.length !== 0 ? (
-            tweetList.map((tweet, index) => (
-              <li key={index} className="text-wrap">
-                <p>{tweet}</p>
-              </li>
-            ))
-          ) : (
-            <div>
-              <p>No Tweets yet!</p>
-            </div>
+      <div className="flex justify-center">
+        <div className="flex flex-col w-2/3 h-fit p-4 gap-2 bg-white rounded-2xl shadow-xl">
+          <label className="flex flex-col items-center justify-center w-full h-64  gap-1 border-2 border-dashed rounded-lg cursor-pointer bg-gray-100 text-gray-500 hover:text-gray-700 hover:border-gray-400 hover:bg-gray-200 transition">
+            <SvgComponent />
+            <p>
+              <strong>Click to upload</strong> or drag and drop
+            </p>
+            <p>.csv or .xlsx file only</p>
+            <input type="file" className="hidden" onChange={handleUploadFile} />
+          </label>
+          {file && fileName && (
+            <p className="underline font-light">{fileName}</p>
           )}
-        </ul>
+          <div
+            className={`flex items-center ${
+              file && fileName ? "justify-between" : "justify-end"
+            }`}
+          >
+            {file && fileName && (
+              <div className="flex flex-col">
+                <input
+                  type="text"
+                  placeholder="Input comments column name"
+                  className="border rounded py-1 pl-2 text-sm"
+                  value={commentCol}
+                  onChange={(e) => setCommentCol(e.target.value)}
+                />
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={isChecked}
+                    onChange={(e) => {
+                      setIsChecked(e.target.checked);
+                      setTimestampCol("");
+                    }}
+                  />
+                  Does your file have a timestamp?
+                </label>
+                {isChecked && (
+                  <input
+                    type="text"
+                    placeholder="Input timestamp column name"
+                    className="border rounded py-1 pl-2 text-sm"
+                    value={timestampCol}
+                    onChange={(e) => setTimestampCol(e.target.value)}
+                  />
+                )}
+              </div>
+            )}
+            <button
+              onClick={handlePredict}
+              className={`p-3 rounded-xl ${
+                file &&
+                fileName &&
+                commentCol !== "" &&
+                (!isChecked || timestampCol !== null)
+                  ? "text-white bg-blue-500 hover:bg-blue-700 cursor-pointer"
+                  : "text-gray-500 bg-gray-200 cursor-not-allowed disabled"
+              } `}
+            >
+              Predict
+            </button>
+          </div>
+        </div>
       </div>
-      <div className="flex gap-2 w-sm">
-        <button
-          className="w-1/2 mt-4 py-1 text-white bg-red-500 hover:bg-red-700 rounded cursor-pointer"
-          onClick={onClearTweet}
-        >
-          Clear Tweets
-        </button>
-        <button
-          disabled={tweetList.length === 0}
-          className={`w-1/2 mt-4 py-1 text-white rounded ${
-            tweetList.length === 0
-              ? "cursor-not-allowed bg-gray-300"
-              : "cursor-pointer bg-blue-500 hover:bg-blue-700"
-          }`}
-          onClick={onPredict}
-        >
-          Predict
-        </button>
-      </div>
-    </div>
+    </>
   );
 }
 

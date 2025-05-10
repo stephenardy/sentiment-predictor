@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 
 function Visualize({ results }) {
-  // const res = console.log(results);
   return (
     <>
       <div className="flex flex-col items-center mt-4">
@@ -9,7 +8,6 @@ function Visualize({ results }) {
         <Link to="/" className="hover:text-blue-500">
           Back to Home
         </Link>
-        {/* <p>{res}</p> */}
       </div>
 
       <div className="flex justify-center mt-4">
@@ -30,7 +28,7 @@ function Visualize({ results }) {
 
           <tbody className="bg-white divide-y divide-gray-200">
             {results?.map((result, index) => (
-              <tr>
+              <tr key={index}>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                   {index + 1}
                 </td>
@@ -38,7 +36,7 @@ function Visualize({ results }) {
                   {result.original_text}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {result.sentiment}
+                  {result.prediction}
                 </td>
               </tr>
             ))}
