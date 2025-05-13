@@ -1,7 +1,10 @@
 import { useState } from "react";
 import api from "../api";
 import { useNavigate } from "react-router-dom";
-import SvgComponent from "../components/SvgFile";
+import Header from "../components/home/Header";
+import InputFile from "../components/home/InputFile";
+import PredictBtn from "../components/home/PredictBtn";
+import ColumnDetail from "../components/home/ColumnDetail";
 
 function Home({ setResults }) {
   const [file, setFile] = useState(null);
@@ -37,80 +40,41 @@ function Home({ setResults }) {
 
   return (
     <>
-      <div className="flex flex-col items-center mt-8 text-center">
-        <h1 className="font-bold text-5xl text-blue-500">Sentiment Analysis</h1>
-        <p className="w-2/3 my-4">
-          Aplikasi ini dirancang untuk menganalisis dan memprediksi sentimen
-          dalam bahasa Indonesia, khususnya terkait pemilihan umum pemimpin.
-          Kami membantu memprediksi sentimen opini publik dan menyajikan
-          visualisasi pola kecenderungan opini masyarakat secara akurat.
-        </p>
-      </div>
+      <Header />
 
-      <div className="flex justify-center">
-        <div className="flex flex-col w-2/3 h-fit p-4 gap-2 bg-white rounded-2xl shadow-xl">
-          <label className="flex flex-col items-center justify-center w-full h-64  gap-1 border-2 border-dashed rounded-lg cursor-pointer bg-gray-100 text-gray-500 hover:text-gray-700 hover:border-gray-400 hover:bg-gray-200 transition">
-            <SvgComponent />
-            <p>
-              <strong>Click to upload</strong> or drag and drop
-            </p>
-            <p>.csv or .xlsx file only</p>
-            <input type="file" className="hidden" onChange={handleUploadFile} />
-          </label>
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-2/3 flex flex-col items-end h-fit p-4 gap-2 bg-white rounded-2xl shadow-xl">
+          <InputFile onUploadFile={handleUploadFile} />
           {file && fileName && (
-            <p className="underline font-light">{fileName}</p>
+            <p className="w-fit font-light text-sm text-gray-500 hover:text-black hover:underline">
+              {fileName}
+            </p>
           )}
-          <div
-            className={`flex items-center ${
-              file && fileName ? "justify-between" : "justify-end"
-            }`}
-          >
-            {file && fileName && (
-              <div className="flex flex-col">
-                <input
-                  type="text"
-                  placeholder="Input comments column name"
-                  className="border rounded py-1 pl-2 text-sm"
-                  value={commentCol}
-                  onChange={(e) => setCommentCol(e.target.value)}
-                />
-                <label>
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    onChange={(e) => {
-                      setIsChecked(e.target.checked);
-                      setTimestampCol("");
-                    }}
-                  />
-                  Does your file have a timestamp?
-                </label>
-                {isChecked && (
-                  <input
-                    type="text"
-                    placeholder="Input timestamp column name"
-                    className="border rounded py-1 pl-2 text-sm"
-                    value={timestampCol}
-                    onChange={(e) => setTimestampCol(e.target.value)}
-                  />
-                )}
-              </div>
-            )}
-            <button
-              onClick={handlePredict}
-              className={`p-3 rounded-xl ${
-                file &&
-                fileName &&
-                commentCol !== "" &&
-                (!isChecked || timestampCol !== null)
-                  ? "text-white bg-blue-500 hover:bg-blue-700 cursor-pointer"
-                  : "text-gray-500 bg-gray-200 cursor-not-allowed disabled"
-              } `}
-            >
-              Predict
-            </button>
-          </div>
         </div>
+        {file && fileName && (
+          <div className="flex items-center w-2/3 h-fit p-4 gap-2 bg-white rounded-2xl shadow-xl justify-between">
+            <ColumnDetail
+              isChecked={isChecked}
+              commentCol={commentCol}
+              timestampCol={timestampCol}
+              setIsChecked={setIsChecked}
+              setCommentCol={setCommentCol}
+              setTimestampCol={setTimestampCol}
+            />
+
+            <PredictBtn
+              file={file}
+              fileName={fileName}
+              isChecked={isChecked}
+              commentCol={commentCol}
+              timestampCol={timestampCol}
+              onPredict={handlePredict}
+            />
+          </div>
+        )}
+        {/* <div className="w-2/3">
+          <h3 className="font-bold text-sm">Preview</h3>
+        </div> */}
       </div>
     </>
   );
